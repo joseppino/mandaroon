@@ -1,4 +1,6 @@
 <script lang="ts">
+  import toast from "svelte-french-toast";
+
   let { dataset } = $props();
 
   console.log(dataset);
@@ -7,6 +9,10 @@
   let pinyinInputVal: string = $state("");
   let toneBtnGroup: HTMLDivElement;
   let toneOptions: string[] = $state([]);
+  let checkBtn: HTMLButtonElement;
+  let hintBtn: HTMLButtonElement;
+  let showHint: boolean = $state(false);
+  let showAnswer: boolean = $state(false);
   
   function getRandomHanzi(hanziDataset: any) {
     let hanzi = Object.keys(hanziDataset);
@@ -40,7 +46,21 @@
   function setCharAt(str: string, index: number, chr: string) {
     if(index > str.length-1) return str;
     return str.substring(0,index) + chr + str.substring(index+1);
-}
+  }
+
+  function checkAnswer() {
+    if(pinyinInputVal === dataset[chosenHanzi].pinyin) {
+      toast.success("Correct");
+    } else if(pinyinInputVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === dataset[chosenHanzi].pinyin.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+      toast.success("Correct - but pay attention to the tones!");
+    } else {
+      toast.error(`Incorrect, the answer was ${dataset[chosenHanzi].pinyin}</strong>}`);
+    }
+    showHint = false;
+    showAnswer = true;
+    pinyinInput.disabled = true;
+    hintBtn.disabled = true;
+  }
 
   const chosenHanzi = getRandomHanzi(dataset);
 
@@ -48,8 +68,15 @@
 
 <div class="component-wrapper">
   <h1>{chosenHanzi}</h1>
-  <p>{dataset[chosenHanzi].pinyin}</p>
-  <p>{dataset[chosenHanzi].pinyin.normalize("NFD").replace(/[\u0300-\u036f]/g, "")}</p>
+  {#if showHint}
+    <p class="hint">
+      {dataset[chosenHanzi].pinyin.substring(0,1)}
+      {dataset[chosenHanzi].pinyin.length < 5 ? "___" : "______"}
+    </p>
+  {/if}
+  {#if showAnswer}
+    <p>{dataset[chosenHanzi].pinyin}</p>
+  {/if}
   <div class="inputs-container">
     <input type="text" name="" id=""
     bind:this={pinyinInput}
@@ -59,6 +86,11 @@
       if(lastChar && 'aeiou'.includes(lastChar)) {
         toneBtnGroup.style.display = "flex";
         displayTones(lastChar);
+      }
+      if(!pinyinInputVal) {
+        toneBtnGroup.style.display = "none";
+      } else {
+
       }
     }}
     >
@@ -70,7 +102,7 @@
             pinyinInputVal = pinyinInputVal.slice(0, -1).concat(toneOption);
           } else { // in case another letter has been typed since vowel...
             for(let i=pinyinInputVal.length-1; i>=0; i--) {
-              if("aeiou".includes(pinyinInputVal.charAt(i))) {
+              if("aeiou".includes(pinyinInputVal.charAt(i).normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
                 pinyinInputVal = setCharAt(pinyinInputVal, i, toneOption);
                 break;
               }
@@ -81,10 +113,17 @@
         >{toneOption}</button>
       {/each}
     </div>
-    <span>
-      <button>Check</button>
-      <button>Hint</button>
-    </span>
+    <div>
+      <button bind:this={checkBtn}
+        onclick={checkAnswer}
+      >Check</button>
+      <button bind:this={hintBtn}
+        onclick={ () => {
+          showHint = true;
+          hintBtn.disabled = true;
+        }}
+      >Hint</button>
+    </div>
     
   </div>
 </div>
