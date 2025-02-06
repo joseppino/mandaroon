@@ -1,0 +1,12 @@
+:root {
+  --jujube-red: #C32136;
+}
+
+body {
+  background-color: var(--jujube-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  text-align: center;
+}
