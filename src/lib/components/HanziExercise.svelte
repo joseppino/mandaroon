@@ -49,17 +49,19 @@
   }
 
   function checkAnswer() {
-    if(pinyinInputVal === dataset[chosenHanzi].pinyin) {
+    if(pinyinInputVal.replaceAll(" ", "") === dataset[chosenHanzi].pinyin.replaceAll(" ", "")) {
       toast.success("Correct");
-    } else if(pinyinInputVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "") === dataset[chosenHanzi].pinyin.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) {
+    } else if(pinyinInputVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replaceAll(" ", "") === dataset[chosenHanzi].pinyin.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replaceAll(" ", "")) {
       toast.success("Correct - but pay attention to the tones!");
     } else {
-      toast.error(`Incorrect, the answer was ${dataset[chosenHanzi].pinyin}</strong>}`);
+      toast.error(`Incorrect, the answer was ${dataset[chosenHanzi].pinyin}`);
     }
     showHint = false;
     showAnswer = true;
     pinyinInput.disabled = true;
     hintBtn.disabled = true;
+    checkBtn.disabled = true;
+    toneBtnGroup.style.display = "none";
   }
 
   const chosenHanzi = getRandomHanzi(dataset);
@@ -67,7 +69,7 @@
 </script>
 
 <div class="component-wrapper">
-  <h1>{chosenHanzi}</h1>
+  <h1 class="hanzi-display">{chosenHanzi}</h1>
   {#if showHint}
     <p class="hint">
       {dataset[chosenHanzi].pinyin.substring(0,1)}
@@ -77,8 +79,8 @@
   {#if showAnswer}
     <p>{dataset[chosenHanzi].pinyin}</p>
   {/if}
-  <div class="inputs-container">
-    <input type="text" name="" id=""
+  <form class="hanzi-form" autocomplete="off">
+    <input type="text" name="" id="" class="pinyin-input" placeholder="Pinyin Translation..."
     bind:this={pinyinInput}
     bind:value={pinyinInputVal}
     onkeyup={() => {
@@ -106,6 +108,7 @@
                 pinyinInputVal = setCharAt(pinyinInputVal, i, toneOption);
                 break;
               }
+              // pinyinInputVal = pinyinInputVal.concat(toneOption);
             }
           }
           pinyinInput.focus();
@@ -113,7 +116,7 @@
         >{toneOption}</button>
       {/each}
     </div>
-    <div>
+    <div class="control-btns">
       <button bind:this={checkBtn}
         onclick={checkAnswer}
       >Check</button>
@@ -125,7 +128,7 @@
       >Hint</button>
     </div>
     
-  </div>
+  </form>
 </div>
 
 <style>
@@ -137,9 +140,21 @@
     align-items: center;
   }
 
-  .inputs-container {
+  .hanzi-display {
+    font-size: 2.5rem;
+  }
+
+  .hanzi-form {
     width: 250px;
     padding: 1rem;
+  }
+
+  .pinyin-input, .pinyin-input:focus {
+    background-color: inherit;
+    border: none;
+    border-bottom: 1px solid black;
+    outline: none;
+    font-size: large;
   }
 
   .tone-btns-container {
@@ -157,5 +172,17 @@
     /* border: 1px solid black; */
     /* box-shadow: px 1px 1px; */
     border-radius: 5px;
+  }
+
+  .control-btns {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin: 5px 0px;
+
+    button {
+      margin: 0px 2px;
+      width: 4rem;
+    }
   }
 </style>
